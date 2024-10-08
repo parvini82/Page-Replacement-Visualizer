@@ -1,11 +1,13 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+import matplotlib.pyplot as plt
 
 
 # الگوریتم‌های جایگزینی صفحه
 def fifo_page_replacement(pages, frame_size):
     frames = []
     page_faults = 0
+    table_data = []
     for page in pages:
         if page not in frames:
             if len(frames) < frame_size:
@@ -14,13 +16,15 @@ def fifo_page_replacement(pages, frame_size):
                 frames.pop(0)
                 frames.append(page)
             page_faults += 1
-    return page_faults
+        table_data.append(list(frames))  # ذخیره فریم‌ها برای نمایش در جدول
+    return page_faults, table_data
 
 
 def lru_page_replacement(pages, frame_size):
     frames = []
     page_faults = 0
     recently_used = []
+    table_data = []
 
     for page in pages:
         if page not in frames:
@@ -35,12 +39,14 @@ def lru_page_replacement(pages, frame_size):
         else:
             recently_used.remove(page)
             recently_used.append(page)
-    return page_faults
+        table_data.append(list(frames))
+    return page_faults, table_data
 
 
 def optimal_page_replacement(pages, frame_size):
     frames = []
     page_faults = 0
+    table_data = []
 
     for i, page in enumerate(pages):
         if page not in frames:
@@ -56,7 +62,20 @@ def optimal_page_replacement(pages, frame_size):
                 farthest_page = frames[future_uses.index(max(future_uses))]
                 frames[frames.index(farthest_page)] = page
             page_faults += 1
-    return page_faults
+        table_data.append(list(frames))
+    return page_faults, table_data
+
+
+# تابع برای رسم نمودار
+def plot_chart(fifo_faults, lru_faults, optimal_faults):
+    algorithms = ['FIFO', 'LRU', 'Optimal']
+    faults = [fifo_faults, lru_faults, optimal_faults]
+
+    plt.bar(algorithms, faults, color=['blue', 'green', 'red'])
+    plt.xlabel('Algorithms')
+    plt.ylabel('Page Faults')
+    plt.title('Page Faults Comparison')
+    plt.show()
 
 
 # رابط گرافیکی
@@ -68,16 +87,18 @@ def run_simulation():
         messagebox.showerror("Error", "Please enter valid input!")
         return
 
-    fifo_faults = fifo_page_replacement(reference_string, frame_size)
-    lru_faults = lru_page_replacement(reference_string, frame_size)
-    optimal_faults = optimal_page_replacement(reference_string, frame_size)
+    fifo_faults, fifo_table = fifo_page_replacement(reference_string, frame_size)
+    lru_faults, lru_table = lru_page_replacement(reference_string, frame_size)
+    optimal_faults, optimal_table = optimal_page_replacement(reference_string, frame_size)
 
-    result_text = (
-        f"FIFO Page Faults: {fifo_faults}\n"
-        f"LRU Page Faults: {lru_faults}\n"
-        f"Optimal Page Faults: {optimal_faults}"
-    )
-    result_label.config(text=result_text)
+    # نمایش جدول برای الگوریتم FIFO
+    for row in tree.get_children():
+        tree.delete(row)
+    for i, frame_state in enumerate(fifo_table):
+        tree.insert("", "end", values=[i + 1] + frame_state)
+
+    # نمایش نمودار
+    plot_chart(fifo_faults, lru_faults, optimal_faults)
 
 
 # ایجاد پنجره اصلی
@@ -97,9 +118,13 @@ frame_entry.pack(pady=5)
 run_button = tk.Button(root, text="Run Simulation", command=run_simulation)
 run_button.pack(pady=10)
 
-# نمایش نتیجه
-result_label = tk.Label(root, text="", font=("Arial", 12))
-result_label.pack(pady=10)
+# جدول برای نمایش صفحات جایگزینی (FIFO به عنوان نمونه)
+tree = ttk.Treeview(root, columns=("Step", "Frame 1", "Frame 2", "Frame 3"), show="headings")
+tree.heading("Step", text="Step")
+tree.heading("Frame 1", text="Frame 1")
+tree.heading("Frame 2", text="Frame 2")
+tree.heading("Frame 3", text="Frame 3")
+tree.pack(pady=10)
 
 # اجرای پنجره
 root.mainloop()
