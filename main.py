@@ -8,6 +8,7 @@ def fifo_page_replacement(pages, frame_size):
     frames = []
     page_faults = 0
     table_data = []
+
     for page in pages:
         if page not in frames:
             if len(frames) < frame_size:
@@ -16,7 +17,8 @@ def fifo_page_replacement(pages, frame_size):
                 frames.pop(0)
                 frames.append(page)
             page_faults += 1
-        table_data.append(list(frames))  # ذخیره فریم‌ها برای نمایش در جدول
+        table_data.append((list(frames), page))  # ذخیره فریم‌ها و صفحه فعلی
+
     return page_faults, table_data
 
 
@@ -39,7 +41,8 @@ def lru_page_replacement(pages, frame_size):
         else:
             recently_used.remove(page)
             recently_used.append(page)
-        table_data.append(list(frames))
+        table_data.append((list(frames), page))  # ذخیره فریم‌ها و صفحه فعلی
+
     return page_faults, table_data
 
 
@@ -62,7 +65,8 @@ def optimal_page_replacement(pages, frame_size):
                 farthest_page = frames[future_uses.index(max(future_uses))]
                 frames[frames.index(farthest_page)] = page
             page_faults += 1
-        table_data.append(list(frames))
+        table_data.append((list(frames), page))  # ذخیره فریم‌ها و صفحه فعلی
+
     return page_faults, table_data
 
 
@@ -94,8 +98,10 @@ def run_simulation():
     # نمایش جدول برای الگوریتم FIFO
     for row in tree.get_children():
         tree.delete(row)
-    for i, frame_state in enumerate(fifo_table):
-        tree.insert("", "end", values=[i + 1] + frame_state)
+
+    # جزئیات بیشتر در جدول
+    for i, (frame_state, current_page) in enumerate(fifo_table):
+        tree.insert("", "end", values=[i + 1, current_page] + frame_state)
 
     # نمایش نمودار
     plot_chart(fifo_faults, lru_faults, optimal_faults)
@@ -104,10 +110,11 @@ def run_simulation():
 # ایجاد پنجره اصلی
 root = tk.Tk()
 root.title("Page Replacement Algorithms")
+root.geometry("800x500")  # تعیین اندازه بزرگ‌تر برای پنجره
 
 # لیبل‌ها و ورودی‌ها
 tk.Label(root, text="Reference String (e.g. 7 0 1 2 0 3 0 4)").pack(pady=5)
-reference_entry = tk.Entry(root, width=50)
+reference_entry = tk.Entry(root, width=60)  # افزایش عرض ورودی
 reference_entry.pack(pady=5)
 
 tk.Label(root, text="Frame Size (e.g. 3)").pack(pady=5)
@@ -119,12 +126,25 @@ run_button = tk.Button(root, text="Run Simulation", command=run_simulation)
 run_button.pack(pady=10)
 
 # جدول برای نمایش صفحات جایگزینی (FIFO به عنوان نمونه)
-tree = ttk.Treeview(root, columns=("Step", "Frame 1", "Frame 2", "Frame 3"), show="headings")
+tree = ttk.Treeview(root, columns=("Step", "Current Page", "Frame 1", "Frame 2", "Frame 3"), show="headings")
 tree.heading("Step", text="Step")
+tree.heading("Current Page", text="Current Page")
 tree.heading("Frame 1", text="Frame 1")
 tree.heading("Frame 2", text="Frame 2")
 tree.heading("Frame 3", text="Frame 3")
-tree.pack(pady=10)
+
+# افزایش عرض و ارتفاع ستون‌ها
+tree.column("Step", width=100)
+tree.column("Current Page", width=100)
+tree.column("Frame 1", width=100)
+tree.column("Frame 2", width=100)
+tree.column("Frame 3", width=100)
+
+tree.pack(pady=10, expand=True, fill='both')
+
+# افزایش ارتفاع ردیف‌ها
+tree.tag_configure('big_row', font=('Arial', 12))  # تعیین فونت بزرگ‌تر
+tree.bind("<Configure>", lambda e: tree.bind("<Configure>", lambda e: tree.see(tree.get_children())))
 
 # اجرای پنجره
 root.mainloop()
