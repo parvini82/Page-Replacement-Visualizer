@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
 
-
 # Page Replacement Algorithms
 def fifo_page_replacement(pages, frame_size):
     frames = []
@@ -18,9 +17,11 @@ def fifo_page_replacement(pages, frame_size):
                 frames.pop(0)
                 frames.append(page)
             page_faults += 1
+            status = "Fault"  # Set status to "Fault"
         else:
-            page_hits += 1  # Increase hit count if page is already in frames
-        table_data.append((list(frames), page, page_faults, page_hits))
+            page_hits += 1
+            status = "Hit"  # Set status to "Hit"
+        table_data.append((list(frames), page, page_faults, page_hits, status))
 
     return page_faults, page_hits, table_data
 
@@ -42,11 +43,13 @@ def lru_page_replacement(pages, frame_size):
                 frames[frames.index(lru_page)] = page
                 recently_used.append(page)
             page_faults += 1
+            status = "Fault"
         else:
-            page_hits += 1  # Increase hit count if page is already in frames
+            page_hits += 1
             recently_used.remove(page)
             recently_used.append(page)
-        table_data.append((list(frames), page, page_faults, page_hits))
+            status = "Hit"
+        table_data.append((list(frames), page, page_faults, page_hits, status))
 
     return page_faults, page_hits, table_data
 
@@ -71,9 +74,11 @@ def optimal_page_replacement(pages, frame_size):
                 farthest_page = frames[future_uses.index(max(future_uses))]
                 frames[frames.index(farthest_page)] = page
             page_faults += 1
+            status = "Fault"
         else:
-            page_hits += 1  # Increase hit count if page is already in frames
-        table_data.append((list(frames), page, page_faults, page_hits))
+            page_hits += 1
+            status = "Hit"
+        table_data.append((list(frames), page, page_faults, page_hits, status))
 
     return page_faults, page_hits, table_data
 
@@ -115,14 +120,35 @@ def run_simulation():
         messagebox.showerror("Error", "Please enter valid input!")
         return
 
+    # Get results for all algorithms
     fifo_faults, fifo_hits, fifo_table = fifo_page_replacement(reference_string, frame_size)
     lru_faults, lru_hits, lru_table = lru_page_replacement(reference_string, frame_size)
     optimal_faults, optimal_hits, optimal_table = optimal_page_replacement(reference_string, frame_size)
 
-    # Display table for FIFO algorithm
-    for i, (frame_state, current_page, faults, hits) in enumerate(fifo_table):
-        hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0  # Calculate hit rate
-        tree.insert("", "end", values=[i + 1, current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}"])
+    # Display FIFO results
+    tree.insert("", "end", values=["FIFO Results", "", "", "", "", "", ""])  # Add a header row for FIFO
+    for i, (frame_state, current_page, faults, hits, status) in enumerate(fifo_table):
+        hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
+        tree.insert("", "end", values=["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status],
+                     tags=("hit" if status == "Hit" else "fault",))  # Tag the row for coloring
+
+    tree.insert("", "end", values=["", "", "", "", "", "", "", ""])  # Add a blank row for spacing
+
+    # Display LRU results
+    tree.insert("", "end", values=["LRU Results", "", "", "", "", "", ""])  # Add a header row for LRU
+    for i, (frame_state, current_page, faults, hits, status) in enumerate(lru_table):
+        hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
+        tree.insert("", "end", values=["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status],
+                     tags=("hit" if status == "Hit" else "fault",))
+
+    tree.insert("", "end", values=["", "", "", "", "", "", "", ""])  # Add a blank row for spacing
+
+    # Display Optimal results
+    tree.insert("", "end", values=["Optimal Results", "", "", "", "", "", ""])  # Add a header row for Optimal
+    for i, (frame_state, current_page, faults, hits, status) in enumerate(optimal_table):
+        hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
+        tree.insert("", "end", values=["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status],
+                     tags=("hit" if status == "Hit" else "fault",))
 
     # Display chart
     plot_chart(fifo_faults, lru_faults, optimal_faults, fifo_hits, lru_hits, optimal_hits)
@@ -148,7 +174,7 @@ run_button.pack(pady=10)
 
 # Treeview to display page replacement steps
 tree = ttk.Treeview(root,
-                    columns=("Step", "Current Page", "Frame 1", "Frame 2", "Frame 3", "Faults", "Hits", "Hit Rate"),
+                    columns=("Step", "Current Page", "Frame 1", "Frame 2", "Frame 3", "Faults", "Hits", "Hit Rate", "Status"),
                     show="headings")
 tree.heading("Step", text="Step")
 tree.heading("Current Page", text="Current Page")
@@ -158,6 +184,7 @@ tree.heading("Frame 3", text="Frame 3")
 tree.heading("Faults", text="Page Faults")
 tree.heading("Hits", text="Page Hits")
 tree.heading("Hit Rate", text="Hit Rate")
+tree.heading("Status", text="Status")  # New column for Status
 
 # Increase width of columns
 tree.column("Step", width=100)
@@ -168,10 +195,11 @@ tree.column("Frame 3", width=100)
 tree.column("Faults", width=100)
 tree.column("Hits", width=100)
 tree.column("Hit Rate", width=100)
+tree.column("Status", width=80)  # Width for Status
 
 # Change colors and appearance of the table
-tree.tag_configure('even', background="#f0f0f0")
-tree.tag_configure('odd', background="#ffffff")
+tree.tag_configure('hit', background="#d4edda", foreground="green")  # Light green for Hits
+tree.tag_configure('fault', background="#f8d7da", foreground="red")  # Light red for Faults
 tree.pack(pady=10, expand=True, fill='both')
 
 # Run the main window
