@@ -14,7 +14,7 @@ def fifo_page_replacement(pages, frame_size):
             if len(frames) < frame_size:
                 frames.append(page)
             else:
-                frames.pop(0)
+                frames.pop(0)  # Remove the first frame (FIFO)
                 frames.append(page)
             page_faults += 1
             status = "Fault"  # Set status to "Fault"
@@ -39,7 +39,7 @@ def lru_page_replacement(pages, frame_size):
                 frames.append(page)
                 recently_used.append(page)
             else:
-                lru_page = recently_used.pop(0)
+                lru_page = recently_used.pop(0)  # Remove the least recently used page
                 frames[frames.index(lru_page)] = page
                 recently_used.append(page)
             page_faults += 1
@@ -187,34 +187,12 @@ run_button = tk.Button(root, text="Run Simulation", command=run_simulation)
 run_button.pack(pady=10)
 
 # Treeview to display page replacement steps
-tree = ttk.Treeview(root,
-                    columns=("Step", "Current Page", "Frame 1", "Frame 2", "Frame 3", "Faults", "Hits", "Hit Rate", "Status"),
-                    show="headings")
-tree.heading("Step", text="Step")
-tree.heading("Current Page", text="Current Page")
-tree.heading("Frame 1", text="Frame 1")
-tree.heading("Frame 2", text="Frame 2")
-tree.heading("Frame 3", text="Frame 3")
-tree.heading("Faults", text="Page Faults")
-tree.heading("Hits", text="Page Hits")
-tree.heading("Hit Rate", text="Hit Rate")
-tree.heading("Status", text="Status")  # New column for Status
-
-# Increase width of columns
-tree.column("Step", width=100)
-tree.column("Current Page", width=100)
-tree.column("Frame 1", width=100)
-tree.column("Frame 2", width=100)
-tree.column("Frame 3", width=100)
-tree.column("Faults", width=100)
-tree.column("Hits", width=100)
-tree.column("Hit Rate", width=100)
-tree.column("Status", width=80)  # Width for Status
+tree = ttk.Treeview(root, show="headings")
+tree.pack(pady=10, expand=True, fill='both')
 
 # Change colors and appearance of the table
 tree.tag_configure('hit', background="#d4edda", foreground="green")  # Light green for Hits
 tree.tag_configure('fault', background="#f8d7da", foreground="red")  # Light red for Faults
-tree.pack(pady=10, expand=True, fill='both')
 
 # Run the main window
 root.mainloop()
