@@ -113,6 +113,11 @@ def run_simulation():
     for row in tree.get_children():
         tree.delete(row)
 
+    # Clear the previous columns
+    for col in tree["columns"]:
+        tree.heading(col, text="")
+        tree.column(col, width=0)
+
     try:
         reference_string = list(map(int, reference_entry.get().split()))
         frame_size = int(frame_entry.get())
@@ -120,35 +125,44 @@ def run_simulation():
         messagebox.showerror("Error", "Please enter valid input!")
         return
 
+    # Define new columns based on the frame size
+    columns = ["Step", "Current Page"] + [f"Frame {i+1}" for i in range(frame_size)] + ["Faults", "Hits", "Hit Rate", "Status"]
+    tree["columns"] = columns
+
+    # Set the headings dynamically
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
     # Get results for all algorithms
     fifo_faults, fifo_hits, fifo_table = fifo_page_replacement(reference_string, frame_size)
     lru_faults, lru_hits, lru_table = lru_page_replacement(reference_string, frame_size)
     optimal_faults, optimal_hits, optimal_table = optimal_page_replacement(reference_string, frame_size)
 
     # Display FIFO results
-    tree.insert("", "end", values=["FIFO Results", "", "", "", "", "", ""])  # Add a header row for FIFO
+    tree.insert("", "end", values=["FIFO Results"] + [""] * (frame_size + 5))  # Adjust header row for FIFO
     for i, (frame_state, current_page, faults, hits, status) in enumerate(fifo_table):
         hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
-        tree.insert("", "end", values=["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status],
-                     tags=("hit" if status == "Hit" else "fault",))  # Tag the row for coloring
+        row_values = ["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status]
+        tree.insert("", "end", values=row_values, tags=("hit" if status == "Hit" else "fault",))
 
-    tree.insert("", "end", values=["", "", "", "", "", "", "", ""])  # Add a blank row for spacing
+    tree.insert("", "end", values=[""] * (frame_size + 7))  # Add a blank row for spacing
 
     # Display LRU results
-    tree.insert("", "end", values=["LRU Results", "", "", "", "", "", ""])  # Add a header row for LRU
+    tree.insert("", "end", values=["LRU Results"] + [""] * (frame_size + 5))  # Adjust header row for LRU
     for i, (frame_state, current_page, faults, hits, status) in enumerate(lru_table):
         hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
-        tree.insert("", "end", values=["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status],
-                     tags=("hit" if status == "Hit" else "fault",))
+        row_values = ["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status]
+        tree.insert("", "end", values=row_values, tags=("hit" if status == "Hit" else "fault",))
 
-    tree.insert("", "end", values=["", "", "", "", "", "", "", ""])  # Add a blank row for spacing
+    tree.insert("", "end", values=[""] * (frame_size + 7))  # Add a blank row for spacing
 
     # Display Optimal results
-    tree.insert("", "end", values=["Optimal Results", "", "", "", "", "", ""])  # Add a header row for Optimal
+    tree.insert("", "end", values=["Optimal Results"] + [""] * (frame_size + 5))  # Adjust header row for Optimal
     for i, (frame_state, current_page, faults, hits, status) in enumerate(optimal_table):
         hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
-        tree.insert("", "end", values=["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status],
-                     tags=("hit" if status == "Hit" else "fault",))
+        row_values = ["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status]
+        tree.insert("", "end", values=row_values, tags=("hit" if status == "Hit" else "fault",))
 
     # Display chart
     plot_chart(fifo_faults, lru_faults, optimal_faults, fifo_hits, lru_hits, optimal_hits)
