@@ -14,7 +14,7 @@ def fifo_page_replacement(pages, frame_size):
             if len(frames) < frame_size:
                 frames.append(page)
             else:
-                frames.pop(0)  # Remove the first frame (FIFO)
+                frames.pop(0)
                 frames.append(page)
             page_faults += 1
             status = "Fault"  # Set status to "Fault"
@@ -39,7 +39,7 @@ def lru_page_replacement(pages, frame_size):
                 frames.append(page)
                 recently_used.append(page)
             else:
-                lru_page = recently_used.pop(0)  # Remove the least recently used page
+                lru_page = recently_used.pop(0)
                 frames[frames.index(lru_page)] = page
                 recently_used.append(page)
             page_faults += 1
@@ -143,6 +143,8 @@ def run_simulation():
     tree.insert("", "end", values=["FIFO Results"] + [""] * (frame_size + 5))  # Adjust header row for FIFO
     for i, (frame_state, current_page, faults, hits, status) in enumerate(fifo_table):
         hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
+        while len(frame_state) < frame_size:  # Ensure frame_state has frame_size length
+            frame_state.append("-")  # Fill empty frames with "-"
         row_values = ["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status]
         tree.insert("", "end", values=row_values, tags=("hit" if status == "Hit" else "fault",))
 
@@ -152,6 +154,8 @@ def run_simulation():
     tree.insert("", "end", values=["LRU Results"] + [""] * (frame_size + 5))  # Adjust header row for LRU
     for i, (frame_state, current_page, faults, hits, status) in enumerate(lru_table):
         hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
+        while len(frame_state) < frame_size:  # Ensure frame_state has frame_size length
+            frame_state.append("-")  # Fill empty frames with "-"
         row_values = ["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status]
         tree.insert("", "end", values=row_values, tags=("hit" if status == "Hit" else "fault",))
 
@@ -161,6 +165,8 @@ def run_simulation():
     tree.insert("", "end", values=["Optimal Results"] + [""] * (frame_size + 5))  # Adjust header row for Optimal
     for i, (frame_state, current_page, faults, hits, status) in enumerate(optimal_table):
         hit_rate = hits / (hits + faults) if (hits + faults) > 0 else 0
+        while len(frame_state) < frame_size:  # Ensure frame_state has frame_size length
+            frame_state.append("-")  # Fill empty frames with "-"
         row_values = ["Step " + str(i + 1), current_page] + frame_state + [faults, hits, f"{hit_rate:.2%}", status]
         tree.insert("", "end", values=row_values, tags=("hit" if status == "Hit" else "fault",))
 
