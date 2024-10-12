@@ -1,5 +1,3 @@
-Here's the text for the README file without Markdown formatting:
-
 # Page Replacement Visualizer
 
 This project simulates different page replacement algorithms using a graphical user interface (GUI). It allows users to visualize the workings of FIFO, LRU, and Optimal page replacement algorithms.
