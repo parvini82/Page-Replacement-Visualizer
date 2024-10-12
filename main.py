@@ -1,55 +1,61 @@
 import tkinter as tk
+from collections import OrderedDict
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
 
 # Page Replacement Algorithms
+from collections import deque
+
+
 def fifo_page_replacement(pages, frame_size):
-    frames = []
+    frames = deque()
     page_faults = 0
     page_hits = 0
     table_data = []
 
     for page in pages:
-        if page not in frames:
+       if page not in frames:
             if len(frames) < frame_size:
                 frames.append(page)
             else:
-                frames.pop(0)
+                frames.popleft()
                 frames.append(page)
             page_faults += 1
-            status = "Fault"  # Set status to "Fault"
-        else:
+            status = "Fault"
+       else:
             page_hits += 1
-            status = "Hit"  # Set status to "Hit"
-        table_data.append((list(frames), page, page_faults, page_hits, status))
+            status = "Hit"
+
+       table_data.append((list(frames), page, page_faults, page_hits, status))
 
     return page_faults, page_hits, table_data
 
 
+
+
+
+
 def lru_page_replacement(pages, frame_size):
-    frames = []
+    frames = OrderedDict()
     page_faults = 0
     page_hits = 0
-    recently_used = []
     table_data = []
 
     for page in pages:
         if page not in frames:
             if len(frames) < frame_size:
-                frames.append(page)
-                recently_used.append(page)
+                frames[page] = True
             else:
-                lru_page = recently_used.pop(0)
-                frames[frames.index(lru_page)] = page
-                recently_used.append(page)
+                frames.popitem(last=False)
+                frames[page] = True
             page_faults += 1
             status = "Fault"
         else:
             page_hits += 1
-            recently_used.remove(page)
-            recently_used.append(page)
+            frames.move_to_end(page)
             status = "Hit"
-        table_data.append((list(frames), page, page_faults, page_hits, status))
+
+        table_data.append((list(frames.keys()), page, page_faults, page_hits, status))
 
     return page_faults, page_hits, table_data
 
